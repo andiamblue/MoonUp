@@ -1,82 +1,85 @@
+// صبر می‌کنیم تا کل محتوای صفحه بارگذاری شود
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Responsive Hamburger Menu ---
+    // --- مدیریت منوی موبایل (همبرگر) ---
     const hamburger = document.querySelector('.hamburger-menu');
-    const navLinks = document.querySelector('.nav-links');
+    const navMenu = document.querySelector('.nav-menu');
+    const navLinks = document.querySelectorAll('.nav-links li a');
 
     hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navLinks.classList.toggle('active');
+        navMenu.classList.toggle('active');
     });
 
-    // Close menu when a link is clicked
-    document.querySelectorAll('.nav-links li a').forEach(link => {
+    // بستن منو با کلیک روی هر لینک
+    navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            if (navLinks.classList.contains('active')) {
-                hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
-            }
-        });
-    });
-
-    // --- Smooth Scrolling for Navigation Links ---
-    // Note: CSS `scroll-behavior: smooth;` handles this for modern browsers,
-    // but this JS provides a fallback and more control if needed.
-    const allLinks = document.querySelectorAll('a[href^="#"]');
-    allLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const href = this.getAttribute('href');
-            const targetElement = document.querySelector(href);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
+            if (navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
             }
         });
     });
     
-    // --- Scroll to Previous Section Button ---
-    const scrollToPrevBtn = document.getElementById('scrollToPrevBtn');
-    const sections = Array.from(document.querySelectorAll('main > section'));
-
-    // Function to show/hide the button
-    const toggleScrollButton = () => {
-        if (window.scrollY > window.innerHeight / 2) {
-            scrollToPrevBtn.style.display = 'block';
-        } else {
-            scrollToPrevBtn.style.display = 'none';
-        }
-    };
-
-    window.addEventListener('scroll', toggleScrollButton);
-
-    // Functionality for the button click
-    scrollToPrevBtn.addEventListener('click', () => {
-        let currentSectionIndex = -1;
-        
-        // Find the index of the current section in view
-        // We find the last section whose top is above the current scroll position
-        for (let i = sections.length - 1; i >= 0; i--) {
-            const sectionTop = sections[i].offsetTop;
-            // Add a small offset (e.g., 100px) to ensure we're well into the section
-            if (window.scrollY >= sectionTop - 100) {
-                currentSectionIndex = i;
-                break;
-            }
-        }
-
-        // If we are in a section (not at the very top) and it's not the first one
-        if (currentSectionIndex > 0) {
-            const prevSection = sections[currentSectionIndex - 1];
-            prevSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            // If we're in the first section or at the top, scroll to the very top of the page
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+    // --- مدیریت منوی کشویی پیشرفته در موبایل ---
+    const dropdown = document.querySelector('.dropdown');
+    dropdown.addEventListener('click', (e) => {
+        // فقط در حالت موبایل با کلیک باز شود
+        if (window.innerWidth <= 768) {
+             // جلوگیری از اسکرول صفحه هنگام باز کردن منو
+            e.preventDefault();
+            dropdown.classList.toggle('active');
         }
     });
 
+    // --- اسکرول نرم به بخش‌ها (جایگزین بهتری برای scroll-behavior) ---
+    const smoothScrollLinks = document.querySelectorAll('a[href^="#"]');
+    smoothScrollLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // --- دکمه خلاقانه "بازگشت به بخش قبلی" ---
+    const scrollUpBtn = document.getElementById('scrollUpBtn');
+    const sections = Array.from(document.querySelectorAll('main > section'));
+
+    // نمایش و عدم نمایش دکمه بر اساس اسکرول
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > window.innerHeight / 2) {
+            scrollUpBtn.classList.add('show');
+        } else {
+            scrollUpBtn.classList.remove('show');
+        }
+    });
+
+    // عملکرد کلیک روی دکمه
+    scrollUpBtn.addEventListener('click', () => {
+        const currentScroll = window.scrollY;
+        let previousSection = null;
+
+        // پیدا کردن بخشی که دقیقا بالاتر از ویوپورت فعلی قرار دارد
+        for (let i = sections.length - 1; i >= 0; i--) {
+            // offsetTop موقعیت بالای هر بخش نسبت به بالای صفحه است
+            // با یک حاشیه کوچک (5 پیکسل) برای دقت بیشتر
+            if (sections[i].offsetTop < currentScroll - 5) {
+                previousSection = sections[i];
+                break;
+            }
+        }
+        
+        // اگر بخش قبلی پیدا شد به آن اسکرول کن، در غیر این صورت به بالای صفحه برو
+        if (previousSection) {
+            previousSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
 });
